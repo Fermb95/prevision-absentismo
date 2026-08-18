@@ -1,0 +1,25 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Cachés de Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Datos locales (la carpeta existe vía .gitkeep, pero la base de datos NO se sube)
+datos/*.sqlite
+datos/*.sqlite-*
+datos/*.db
+
+# Secretos locales
+.env
+.streamlit/secrets.toml
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

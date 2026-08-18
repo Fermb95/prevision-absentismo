@@ -1,0 +1,28 @@
+# Despliegue GRATUITO en Render (plan free, sin disco persistente).
+#
+# La persistencia del histórico de previsiones NO se hace en disco (el plan free
+# tiene disco efímero y lo borraría en cada redespliegue), sino en TURSO
+# (SQLite en la nube, plan gratuito). Ver README, secciones 7 y 11.
+#
+# Los secretos (tokens de Turso y contraseña opcional) NO van en este fichero:
+# se definen a mano en el panel de Render como variables de entorno.
+services:
+  - type: web
+    name: prevision-absentismo
+    runtime: docker          # Render detecta y construye el Dockerfile
+    plan: free               # 0 €. Duerme tras ~15 min de inactividad.
+    region: frankfurt        # el más cercano a España
+    healthCheckPath: /_stcore/health   # endpoint de salud propio de Streamlit
+    envVars:
+      # DATA_DIR sigue definido para el modo local/efímero, pero en producción
+      # la persistencia real la aporta Turso (variables de abajo).
+      - key: DATA_DIR
+        value: /data
+      # --- Persistencia en la nube (Turso). Definir en el panel de Render. ---
+      - key: TURSO_DATABASE_URL
+        sync: false          # p. ej. libsql://mi-base-xxxxx.turso.io
+      - key: TURSO_AUTH_TOKEN
+        sync: false          # token generado con la CLI de Turso
+      # --- Protección opcional por contraseña (dejar sin definir = app abierta) ---
+      - key: APP_PASSWORD
+        sync: false

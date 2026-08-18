@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------
+# Versiones fijadas. Objetivo de ejecución: Python 3.11 (ver Dockerfile).
+# ---------------------------------------------------------------------------
+
+# Interfaz web
+streamlit==1.41.1
+
+# Datos y cálculo
+pandas==2.2.3
+numpy==1.26.4
+python-dateutil==2.9.0.post0
+
+# Lectura de Excel (.xlsx)
+openpyxl==3.1.5
+
+# Modelos de previsión
+prophet==1.1.6
+statsmodels==0.14.4
+scipy==1.13.1        # dependencia de statsmodels; se fija para reproducibilidad
+
+# Gráficos
+plotly==5.24.1
+
+# Persistencia en la nube (opcional): Turso / libSQL (SQLite en la nube).
+# Solo se usa si TURSO_DATABASE_URL está definida; en local se usa sqlite3 (stdlib).
+# NOTA: este es el ÚNICO paquete sin pin exacto. Es una extensión en Rust cuya
+# disponibilidad de wheels varía por versión de Python; el rango deja que Render
+# (Python 3.11) elija una versión con wheel válido y evita romper el build.
+libsql-experimental>=0.0.30,<0.2
+
+# Pruebas
+pytest==8.3.4

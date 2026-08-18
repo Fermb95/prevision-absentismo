@@ -1,0 +1,13 @@
+# Configuración de Streamlit. El puerto y la dirección reales los fija el
+# Dockerfile con $PORT; aquí solo tema y comportamiento del servidor.
+[server]
+headless = true
+# No recargar automáticamente en producción.
+runOnSave = false
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#1f6feb"

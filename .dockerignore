@@ -1,0 +1,21 @@
+# No copiar entornos ni cachés al contexto de build (imagen más ligera y limpia).
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.git/
+.gitignore
+
+# Datos locales y secretos: no deben entrar en la imagen.
+datos/*.sqlite
+datos/*.sqlite-*
+.env
+.streamlit/secrets.toml
+
+# Documentación pesada / basura del SO
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
