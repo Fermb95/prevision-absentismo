@@ -15,7 +15,7 @@ import streamlit as st
 
 from persistencia import previsiones
 from ui import servicios
-from ui.graficos import grafico_prevision
+from ui.graficos import CONFIG_PLOTLY, grafico_prevision
 from ui.sidebar import Seleccion
 
 
@@ -39,8 +39,8 @@ def render(sel: Seleccion) -> None:
             "y pulsa **Recalcular previsión** para generar una."
         )
         st.plotly_chart(
-            grafico_prevision(hist, prev, titulo=f"{sel.centro} · {sel.turno}"),
-            use_container_width=True,
+            grafico_prevision(hist, prev, titulo=f"{sel.centro} · {servicios.turno_bonito(sel.turno)}"),
+            use_container_width=True, config=CONFIG_PLOTLY,
         )
         return
 
@@ -117,8 +117,8 @@ def render(sel: Seleccion) -> None:
 
     # ---------------- Gráfico ----------------
     st.plotly_chart(
-        grafico_prevision(hist, prev, titulo=f"{sel.centro} · {sel.turno}"),
-        use_container_width=True,
+        grafico_prevision(hist, prev, titulo=f"{sel.centro} · {servicios.turno_bonito(sel.turno)}"),
+        use_container_width=True, config=CONFIG_PLOTLY,
     )
 
     with st.expander("Ver tabla de previsión"):

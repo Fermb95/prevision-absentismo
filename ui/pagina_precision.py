@@ -19,7 +19,7 @@ from modelo.metricas import alerta_deriva, resumen_error
 from modelo.motor import motores_disponibles
 from persistencia import previsiones
 from ui import servicios
-from ui.graficos import grafico_precision
+from ui.graficos import CONFIG_PLOTLY, grafico_precision
 from ui.sidebar import Seleccion
 
 
@@ -61,7 +61,9 @@ def render(sel: Seleccion) -> None:
         st.info("No hay histórico para esta combinación.")
         return
 
-    tab1, tab2 = st.tabs(["Previsión guardada vs. realidad", "Backtest (evaluar a fecha X)"])
+    tab1, tab2 = st.tabs(
+        ["Previsión guardada frente a realidad", "Validación a una fecha pasada"]
+    )
 
     # ---------------- 1. Previsión guardada vs realidad ----------------
     with tab1:
@@ -75,7 +77,7 @@ def render(sel: Seleccion) -> None:
         if prev.empty:
             st.warning(
                 "No hay previsión guardada a esa fecha para este centro/turno. "
-                "Usa la pestaña **Backtest** para evaluar el modelo igualmente."
+                "Usa la pestaña **Validación a una fecha pasada** para evaluar el modelo igualmente."
             )
         else:
             real = _serie_real(hist)
@@ -83,8 +85,8 @@ def render(sel: Seleccion) -> None:
             prev["real"] = prev["periodo_objetivo"].map(real.to_dict())
             _bloque_metricas(prev)
             st.plotly_chart(
-                grafico_precision(prev, titulo=f"{sel.centro} · {sel.turno}"),
-                use_container_width=True,
+                grafico_precision(prev, titulo=f"{sel.centro} · {servicios.turno_bonito(sel.turno)}"),
+                use_container_width=True, config=CONFIG_PLOTLY,
             )
 
     # ---------------- 2. Backtest ----------------
@@ -95,7 +97,7 @@ def render(sel: Seleccion) -> None:
         )
         periodos = hist["periodo"].tolist()
         if len(periodos) < 7:
-            st.info("Hace falta algo más de histórico para un backtest con sentido.")
+            st.info("Hace falta algo más de histórico para una validación con sentido.")
             return
 
         col_a, col_b = st.columns(2)
@@ -112,7 +114,7 @@ def render(sel: Seleccion) -> None:
         _bloque_metricas(bt)
         st.plotly_chart(
             grafico_precision(
-                bt, titulo=f"Backtest desde {servicios.periodo_bonito(corte)} · {motor}"
+                bt, titulo=f"Validación desde {servicios.periodo_bonito(corte)} · {motor}"
             ),
-            use_container_width=True,
+            use_container_width=True, config=CONFIG_PLOTLY,
         )

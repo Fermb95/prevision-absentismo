@@ -19,6 +19,7 @@ import streamlit as st
 import config
 from persistencia import previsiones
 from ui import servicios
+from ui.graficos import CONFIG_PLOTLY
 from ui.sidebar import Seleccion
 
 _ORDEN_TURNOS = ["manana", "tarde", "noche"]
@@ -28,7 +29,7 @@ def _heatmap(pivot: pd.DataFrame) -> go.Figure:
     fig = go.Figure(
         go.Heatmap(
             z=pivot.to_numpy(),
-            x=[t.capitalize() for t in pivot.columns],
+            x=[servicios.turno_bonito(t) for t in pivot.columns],
             y=pivot.index,
             colorscale="RdYlGn",
             reversescale=True,             # verde=bajo, rojo=alto
@@ -67,6 +68,23 @@ def render(sel: Seleccion) -> None:
     prox = prev[prev["periodo_objetivo"] == proximo].copy()
     st.subheader(f"Próximo mes: {servicios.periodo_bonito(proximo)}")
 
+    # --- Alerta de centros en rojo (por encima del umbral ámbar) ---
+    rojos = prox[prox["valor"] > config.UMBRALES_SEMAFORO.ambar_max]
+    rojos = rojos[rojos["turno"] != "todos"].sort_values("valor", ascending=False)
+    if not rojos.empty:
+        items = " · ".join(
+            f"{r['centro']}/{servicios.turno_bonito(r['turno'])} "
+            f"({servicios.fmt_pct(r['valor'])})"
+            for _, r in rojos.iterrows()
+        )
+        st.markdown(
+            f'<div class="alerta-roja">🔴 <b>{len(rojos)} '
+            f'{"combinación" if len(rojos) == 1 else "combinaciones"} en rojo</b> '
+            f'(por encima del {servicios.fmt_pct(config.UMBRALES_SEMAFORO.ambar_max)}): '
+            f"{items}</div>",
+            unsafe_allow_html=True,
+        )
+
     # Plantilla de referencia por centro×turno (para las personas a cubrir).
     hist = servicios.historico_de(sel.modo)
     plantillas = (
@@ -81,7 +99,7 @@ def render(sel: Seleccion) -> None:
         filas.append({
             "": emoji,
             "Centro": r["centro"],
-            "Turno": r["turno"],
+            "Turno": servicios.turno_bonito(r["turno"]),
             "Tasa prevista": r["valor"],
             "Intervalo 90%": f"{servicios.fmt_pct(r['lo'])} – {servicios.fmt_pct(r['hi'])}",
             "Personas a cubrir": servicios.fte_ausentes(r["valor"], pl),
@@ -96,7 +114,7 @@ def render(sel: Seleccion) -> None:
             solo_turnos.pivot_table(index="centro", columns="turno", values="valor")
             .reindex(columns=[t for t in _ORDEN_TURNOS if t in solo_turnos["turno"].unique()])
         )
-        st.plotly_chart(_heatmap(pivot), use_container_width=True)
+        st.plotly_chart(_heatmap(pivot), use_container_width=True, config=CONFIG_PLOTLY)
 
     # --- Tabla ordenada de peor a mejor ---
     st.markdown("**Detalle (de peor a mejor)**")

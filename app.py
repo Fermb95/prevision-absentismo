@@ -1,10 +1,9 @@
 """
 app.py — Punto de entrada de la aplicación Streamlit.
 
-Solo se encarga de: configurar la página, aplicar la protección opcional por
-contraseña, construir la barra lateral, mostrar el banner de modo y enrutar a
-cada una de las tres páginas. La lógica vive en los módulos ingesta/modelo/
-persistencia/ui; aquí no hay reglas de negocio.
+Configura la página, aplica el estilo global, la protección opcional por
+contraseña, construye la barra lateral, muestra la cabecera con el modo y enruta
+a cada página. La lógica vive en los módulos ingesta/modelo/persistencia/ui.
 
 Ejecutar en local:   streamlit run app.py
 """
@@ -21,22 +20,26 @@ st.set_page_config(
 
 from ui import (  # noqa: E402
     auth,
+    estilo,
+    pagina_comparativa,
     pagina_datos,
     pagina_precision,
     pagina_prevision,
     pagina_resumen,
 )
-from ui.sidebar import banner_modo, construir_sidebar  # noqa: E402
+from ui.sidebar import construir_sidebar  # noqa: E402
 
 PAGINAS = {
     "🗺️ Resumen": pagina_resumen.render,
     "📈 Previsión": pagina_prevision.render,
     "🎯 Precisión": pagina_precision.render,
+    "🔀 Comparativa": pagina_comparativa.render,
     "🗂️ Datos": pagina_datos.render,
 }
 
 
 def main() -> None:
+    estilo.aplicar_estilo()
     auth.exigir_password()
 
     sel = construir_sidebar()
@@ -44,13 +47,13 @@ def main() -> None:
     st.sidebar.divider()
     eleccion = st.sidebar.radio("Página", options=list(PAGINAS.keys()))
 
-    banner_modo(sel.modo)
+    estilo.cabecera(sel.modo)
     PAGINAS[eleccion](sel)
 
     st.sidebar.divider()
     st.sidebar.caption(
-        "Solo datos AGREGADOS por centro/turno/mes. La app no almacena ni procesa "
-        "datos de personas ni de salud."
+        "Solo datos agregados por centro, turno y mes. La aplicación no almacena "
+        "ni procesa datos de personas ni de salud."
     )
 
 

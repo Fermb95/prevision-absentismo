@@ -8,6 +8,9 @@ turno, **nunca por persona**.
 
 - **Stack:** Python + Streamlit (una sola URL, usable en móvil, tablet y PC).
 - **Interfaz:** en español, con números y fechas en formato español.
+- **Pantallas:** Resumen (panel semáforo de todos los centros), Previsión (KPIs +
+  dimensionamiento de plantilla), Precisión (previsión vs. realidad + validación
+  temporal), Comparativa (una tanda frente a otra) y Datos (carga y recálculo).
 - **Despliegue:** GitHub → Render (plan gratuito) + Turso para la persistencia.
 - **Ejecución local:** `streamlit run app.py`.
 
@@ -290,7 +293,8 @@ ingesta/               # FuenteDatos (CSV real + API stub), validación, plantil
 modelo/                # motores (Prophet/SARIMA/naive), previsión, backtest, métricas
 persistencia/          # SQLite/Turso: histórico y previsiones versionadas
 datos_demo/            # generador de datos ficticios
-ui/                    # páginas, gráficos, sidebar, auth, servicios
+ui/                    # páginas (resumen, previsión, precisión, comparativa, datos),
+                       # gráficos, estilo, sidebar, auth, servicios
 tests/                 # pruebas (privacidad, previsión, métricas, versionado, bajas largas)
 Dockerfile
 render.yaml            # despliegue Render (free + Turso)

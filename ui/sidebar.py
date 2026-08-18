@@ -49,7 +49,9 @@ def construir_sidebar() -> Seleccion:
     if centros:
         centro = st.sidebar.selectbox("Centro de trabajo", options=centros)
         turnos = servicios.turnos_de(modo, centro)
-        turno = st.sidebar.selectbox("Turno", options=turnos)
+        turno = st.sidebar.selectbox(
+            "Turno", options=turnos, format_func=servicios.turno_bonito
+        )
     else:
         centro, turno = None, None
         st.sidebar.info("No hay datos cargados en este modo. Ve a la página **Datos**.")

@@ -13,7 +13,7 @@ import streamlit as st
 import config
 from ingesta import plantillas
 from ingesta.fuente import FuenteCSV, cargar_y_validar
-from modelo.motor import motores_disponibles
+from modelo.motor import mejor_motor_disponible, motores_disponibles
 from persistencia import db, historico, previsiones
 from ui import servicios
 from ui.sidebar import Seleccion
@@ -101,11 +101,19 @@ def _seccion_recalcular(sel: Seleccion) -> None:
         "futuro). Cada recálculo crea una **tanda nueva** y NUNCA sobrescribe las anteriores."
     )
 
-    motores = motores_disponibles()
-    motor = st.selectbox("Motor de previsión", options=motores, index=0,
-                         help="Prophet (si está disponible) es el principal; SARIMA la alternativa.")
-    if "prophet" not in motores:
-        st.caption("ℹ️ Prophet no está disponible en este entorno; se ofrecen los demás motores.")
+    nombres_motor = {
+        "auto": "Automático (recomendado)",
+        "prophet": "Prophet", "sarima": "SARIMA", "naive": "Sencillo",
+    }
+    opciones = ["auto"] + motores_disponibles()
+    motor_sel = st.selectbox(
+        "Motor de previsión", options=opciones, index=0,
+        format_func=lambda m: nombres_motor.get(m, m),
+        help="«Automático» elige el mejor disponible (Prophet › SARIMA › Sencillo).",
+    )
+    motor = mejor_motor_disponible() if motor_sel == "auto" else motor_sel
+    if "prophet" not in motores_disponibles():
+        st.caption("ℹ️ Prophet no está disponible en este entorno; se usan los demás motores.")
 
     if st.button("🔄 Recalcular previsión", type="primary"):
         gripe_df = st.session_state.get("gripe_real") if sel.modo == "real" else None

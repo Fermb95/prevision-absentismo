@@ -109,6 +109,17 @@ def periodo_bonito(periodo: str) -> str:
     return f"{meses[int(mes) - 1]} {anio}"
 
 
+# Etiquetas de turno para MOSTRAR (el valor interno sigue siendo 'manana', etc.).
+ETIQUETAS_TURNO: dict[str, str] = {
+    "manana": "Mañana", "tarde": "Tarde", "noche": "Noche", "todos": "Todos",
+}
+
+
+def turno_bonito(turno: str) -> str:
+    """'manana' → 'Mañana' (solo para presentación)."""
+    return ETIQUETAS_TURNO.get(turno, str(turno).capitalize())
+
+
 # ---------------------------------------------------------------------------
 # Dimensionamiento de plantilla y semáforo
 # ---------------------------------------------------------------------------

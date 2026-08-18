@@ -71,3 +71,15 @@ def test_csv_bytes_tiene_cabecera():
     data = servicios.a_csv_bytes(df)
     texto = data.decode("utf-8-sig")
     assert "centro;tasa" in texto
+
+
+# ------------------------------ ESPAÑOL ------------------------------
+def test_turno_bonito_con_enie():
+    import config
+    assert servicios.turno_bonito("manana") == "Mañana"
+    assert servicios.turno_bonito("noche") == "Noche"
+    # Todos los turnos válidos deben tener etiqueta en español (sin 'manana').
+    for t in config.TURNOS_VALIDOS:
+        etiqueta = servicios.turno_bonito(t)
+        assert etiqueta[0].isupper()
+        assert "manana" not in etiqueta
