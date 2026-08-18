@@ -7,8 +7,12 @@ números, porcentajes y fechas.
 """
 from __future__ import annotations
 
+import io
+import math
+
 import pandas as pd
 
+import config
 from persistencia import db, historico, previsiones
 
 
@@ -103,3 +107,65 @@ def periodo_bonito(periodo: str) -> str:
              "jul", "ago", "sep", "oct", "nov", "dic"]
     anio, mes = periodo.split("-")
     return f"{meses[int(mes) - 1]} {anio}"
+
+
+# ---------------------------------------------------------------------------
+# Dimensionamiento de plantilla y semáforo
+# ---------------------------------------------------------------------------
+def plantilla_ref(hist_ct: pd.DataFrame) -> float:
+    """Plantilla de referencia para un centro×turno: la del último mes conocido."""
+    df = hist_ct.dropna(subset=["plantilla"])
+    if df.empty:
+        return float("nan")
+    df = df.sort_values("periodo")
+    return float(df["plantilla"].iloc[-1])
+
+
+def fte_ausentes(tasa: float, plantilla: float) -> float:
+    """Personas equivalentes ausentes (FTE) = tasa × plantilla."""
+    if plantilla is None or pd.isna(plantilla):
+        return float("nan")
+    return float(tasa) * float(plantilla)
+
+
+def refuerzo_recomendado(tasa_hi: float, plantilla: float) -> int:
+    """Personas de refuerzo para cubrir el peor caso del intervalo 90% (redondeo arriba)."""
+    fte = fte_ausentes(tasa_hi, plantilla)
+    if pd.isna(fte):
+        return 0
+    return int(math.ceil(fte))
+
+
+def clasificar_semaforo(tasa: float) -> tuple[str, str]:
+    """Devuelve (emoji, nivel) según los umbrales de config: verde/ámbar/rojo."""
+    u = config.UMBRALES_SEMAFORO
+    if pd.isna(tasa):
+        return "⚪", "sin dato"
+    if tasa < u.verde_max:
+        return "🟢", "verde"
+    if tasa <= u.ambar_max:
+        return "🟡", "ambar"
+    return "🔴", "rojo"
+
+
+def fiabilidad_de(hist_ct: pd.DataFrame) -> str:
+    """'alta' si hay >= min_meses_fiable meses; si no 'baja'."""
+    n = hist_ct["periodo"].nunique()
+    return "alta" if n >= config.PARAMS_MODELO.min_meses_fiable else "baja"
+
+
+# ---------------------------------------------------------------------------
+# Exportación a Excel / CSV
+# ---------------------------------------------------------------------------
+def construir_excel(hojas: dict[str, pd.DataFrame]) -> bytes:
+    """Empaqueta varios DataFrames en un Excel (una hoja por clave) y lo devuelve en bytes."""
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        for nombre, df in hojas.items():
+            df.to_excel(writer, sheet_name=nombre[:31], index=False)
+    return buffer.getvalue()
+
+
+def a_csv_bytes(df: pd.DataFrame) -> bytes:
+    """DataFrame a CSV en bytes (separador ';', UTF-8 con BOM para Excel español)."""
+    return df.to_csv(index=False, sep=";").encode("utf-8-sig")

@@ -133,6 +133,16 @@ PARAMS_MODELO = ParametrosModelo()
 # 6. MÉTRICAS Y ALERTAS DE DERIVA
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True)
+class UmbralesSemaforo:
+    """Cortes para el color de KPIs y del panel resumen (en tasa, fracción 0–1)."""
+    verde_max: float = 0.06   # < 6% → verde
+    ambar_max: float = 0.10   # 6–10% → ámbar; > 10% → rojo
+
+
+UMBRALES_SEMAFORO = UmbralesSemaforo()
+
+
+@dataclass(frozen=True)
 class UmbralesAlerta:
     # Deriva: nº de meses consecutivos por encima del umbral de error que
     # disparan la alerta en la página de Precisión.

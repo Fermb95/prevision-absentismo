@@ -19,10 +19,17 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from ui import auth, pagina_datos, pagina_precision, pagina_prevision  # noqa: E402
+from ui import (  # noqa: E402
+    auth,
+    pagina_datos,
+    pagina_precision,
+    pagina_prevision,
+    pagina_resumen,
+)
 from ui.sidebar import banner_modo, construir_sidebar  # noqa: E402
 
 PAGINAS = {
+    "🗺️ Resumen": pagina_resumen.render,
     "📈 Previsión": pagina_prevision.render,
     "🎯 Precisión": pagina_precision.render,
     "🗂️ Datos": pagina_datos.render,

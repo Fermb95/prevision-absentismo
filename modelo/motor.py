@@ -236,6 +236,11 @@ class ModeloProphet(Modelo):
             daily_seasonality=False,
             seasonality_mode="additive",
         )
+        # Festivos de España: afinan la estacionalidad (puentes, Navidad, etc.).
+        try:
+            m.add_country_holidays(country_name="ES")
+        except Exception:
+            pass  # si la versión de prophet/holidays no lo soporta, seguimos igual
         if gripe is not None and len(gripe) > 0:
             df = df.merge(
                 gripe.rename("gripe").rename_axis("ds").reset_index(), on="ds", how="left"

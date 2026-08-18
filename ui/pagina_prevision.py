@@ -46,6 +46,13 @@ def render(sel: Seleccion) -> None:
 
     prev = prev.sort_values("periodo_objetivo").head(sel.horizonte).reset_index(drop=True)
 
+    # Badge de fiabilidad de esta serie.
+    fiab = servicios.fiabilidad_de(hist)
+    if fiab == "alta":
+        st.caption("🟩 Fiabilidad **alta** (histórico suficiente).")
+    else:
+        st.caption("🟨 Fiabilidad **baja**: poco histórico, tómalo con cautela.")
+
     # ---------------- KPIs ----------------
     por_mes, media_teor = servicios.jornadas_teoricas_ref(hist)
     prox = prev.iloc[0]
@@ -56,6 +63,7 @@ def render(sel: Seleccion) -> None:
     jorn_lo = prox["lo"] * teor_prox
     jorn_hi = prox["hi"] * teor_prox
     media_horizonte = prev["valor"].mean()
+    emoji, _nivel = servicios.clasificar_semaforo(prox["valor"])
 
     # Variación interanual: próximo mes previsto vs mismo mes del año anterior (real).
     anio_prev = int(prox["periodo_objetivo"][:4]) - 1
@@ -71,7 +79,7 @@ def render(sel: Seleccion) -> None:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric(
         f"Tasa prevista · {servicios.periodo_bonito(prox['periodo_objetivo'])}",
-        servicios.fmt_pct(prox["valor"]),
+        f"{emoji} {servicios.fmt_pct(prox['valor'])}",
         help=f"Intervalo 90%: {servicios.fmt_pct(prox['lo'])} – {servicios.fmt_pct(prox['hi'])}",
     )
     c2.metric(
@@ -81,6 +89,26 @@ def render(sel: Seleccion) -> None:
     )
     c3.metric(f"Media prevista ({sel.horizonte} meses)", servicios.fmt_pct(media_horizonte))
     c4.metric("Variación interanual", variacion_txt)
+
+    # ---------------- Dimensionamiento de plantilla ----------------
+    plantilla = servicios.plantilla_ref(hist)
+    fte = servicios.fte_ausentes(prox["valor"], plantilla)
+    fte_lo = servicios.fte_ausentes(prox["lo"], plantilla)
+    fte_hi = servicios.fte_ausentes(prox["hi"], plantilla)
+    refuerzo = servicios.refuerzo_recomendado(prox["hi"], plantilla)
+
+    d1, d2 = st.columns(2)
+    d1.metric(
+        "Personas equivalentes ausentes (próx. mes)",
+        servicios.fmt_num(fte, 1),
+        help=f"= tasa × plantilla ({servicios.fmt_num(plantilla,0)} pers.). "
+             f"Rango 90%: {servicios.fmt_num(fte_lo,1)} – {servicios.fmt_num(fte_hi,1)}",
+    )
+    d2.metric(
+        "Refuerzo recomendado (peor caso 90%)",
+        f"{servicios.fmt_num(refuerzo,0)} pers.",
+        help="Personas a tener disponibles para cubrir el límite superior del intervalo.",
+    )
 
     st.caption(
         f"Intervalo 90% del próximo mes: **{servicios.fmt_pct(prox['lo'])} – "
@@ -105,3 +133,20 @@ def render(sel: Seleccion) -> None:
             tabla[["periodo", "tasa prevista", "intervalo 90%"]],
             hide_index=True, use_container_width=True,
         )
+
+    # ---------------- Exportar (este centro×turno) ----------------
+    # `prev` ya trae centro/turno (viene de la tabla previsiones); seleccionamos
+    # solo las columnas útiles para el informe.
+    cols_exp = [c for c in ("centro", "turno", "periodo_objetivo", "valor", "lo", "hi", "modelo")
+                if c in prev.columns]
+    exp = prev[cols_exp].copy()
+    c1, c2 = st.columns(2)
+    c1.download_button(
+        "⬇️ Previsión en Excel", data=servicios.construir_excel({"prevision": exp, "historico": hist}),
+        file_name=f"prevision_{sel.centro}_{sel.turno}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    c2.download_button(
+        "⬇️ Previsión en CSV", data=servicios.a_csv_bytes(exp),
+        file_name=f"prevision_{sel.centro}_{sel.turno}.csv", mime="text/csv",
+    )

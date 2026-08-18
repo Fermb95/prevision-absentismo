@@ -63,7 +63,7 @@ def construir_sidebar() -> Seleccion:
 
     # --- Fecha de análisis ("ver la foto a fecha…") ---
     fecha_analisis = st.sidebar.date_input(
-        "Ver la foto a fecha…", value=date.today(),
+        "Ver la foto a fecha…", value=date.today(), format="DD/MM/YYYY",
         help="Lee la previsión que ya estaba guardada a esa fecha (no recalcula al vuelo).",
     )
 
