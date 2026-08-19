@@ -17,24 +17,28 @@ CODIFICACION = "utf-8-sig"  # BOM para Excel español
 
 
 def plantilla_absentismo_df() -> pd.DataFrame:
-    """Plantilla del fichero principal con 2 filas de ejemplo."""
-    return pd.DataFrame(
-        [
-            {
-                "centro": "Almacén Norte", "turno": "manana", "anio": 2026, "mes": 1,
-                "plantilla_media": 27, "jornadas_teoricas": 540, "jornadas_perdidas": 38,
-            },
-            {
-                "centro": "Almacén Norte", "turno": "tarde", "anio": 2026, "mes": 1,
-                "plantilla_media": 18, "jornadas_teoricas": 360, "jornadas_perdidas": 25,
-            },
-            {
-                "centro": "Almacén Norte", "turno": "noche", "anio": 2026, "mes": 1,
-                "plantilla_media": 12, "jornadas_teoricas": 240, "jornadas_perdidas": 26,
-            },
-        ],
-        columns=list(config.COLUMNAS_ABSENTISMO),
-    )
+    """Plantilla del fichero principal con filas de ejemplo (3 turnos).
+
+    Incluye las columnas de factores estructurales OPCIONALES (por centro/turno):
+    tipo_horario, rotacion_pct, antiguedad_media, satisfaccion_media, jornada_media.
+    Si no quieres usarlas, puedes borrar esas columnas.
+    """
+    filas = [
+        {"centro": "Almacén Norte", "turno": "manana", "anio": 2026, "mes": 1,
+         "plantilla_media": 27, "jornadas_teoricas": 540, "jornadas_perdidas": 38,
+         "tipo_horario": "flexible", "rotacion_pct": 12, "antiguedad_media": 9.5,
+         "satisfaccion_media": 7.8, "jornada_media": 160},
+        {"centro": "Almacén Norte", "turno": "tarde", "anio": 2026, "mes": 1,
+         "plantilla_media": 18, "jornadas_teoricas": 360, "jornadas_perdidas": 25,
+         "tipo_horario": "fijo", "rotacion_pct": 18, "antiguedad_media": 7.0,
+         "satisfaccion_media": 7.1, "jornada_media": 160},
+        {"centro": "Almacén Norte", "turno": "noche", "anio": 2026, "mes": 1,
+         "plantilla_media": 12, "jornadas_teoricas": 240, "jornadas_perdidas": 26,
+         "tipo_horario": "rotativo", "rotacion_pct": 34, "antiguedad_media": 4.5,
+         "satisfaccion_media": 6.2, "jornada_media": 160},
+    ]
+    columnas = list(config.COLUMNAS_ABSENTISMO) + list(config.COLUMNAS_FACTORES)
+    return pd.DataFrame(filas, columns=columnas)
 
 
 def plantilla_gripe_df() -> pd.DataFrame:

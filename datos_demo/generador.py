@@ -81,12 +81,15 @@ def generar_panel(fin: date | None = None) -> pd.DataFrame:
             # Reparto de plantilla por turno: mañana>tarde>noche.
             reparto = {"manana": 0.45, "tarde": 0.35, "noche": 0.20}[turno]
             plantilla_turno = max(int(plantilla_centro * reparto), 5)
+            # Efecto (suave) de los factores estructurales del centro/turno, para
+            # que el análisis de drivers muestre asociaciones realistas.
+            mult_factor = _mult_factores(_factores_de(idx, centro, turno))
 
             for t, (anio, mes) in enumerate(periodos):
                 estacional = _ESTACIONALIDAD[mes]
                 tendencia = 1.0 + pendiente * t
                 ruido = 1.0 + rng.normal(0, 0.08)  # ±8% de ruido multiplicativo
-                tasa = base * factor_turno * estacional * tendencia * ruido
+                tasa = base * factor_turno * estacional * tendencia * ruido * mult_factor
                 tasa = float(np.clip(tasa, 0.005, 0.35))
 
                 # Jornadas teóricas ≈ plantilla × días laborables del mes.
@@ -152,6 +155,74 @@ def generar_gripe(fin: date | None = None) -> pd.DataFrame:
         pico = _ESTACIONALIDAD[mes] - 0.95  # 0 en verano suave, ~0.4 en invierno
         incidencia = max(0.0, pico * 700 + rng.normal(0, 30))
         filas.append({"anio": anio, "mes": mes, "incidencia": round(incidencia, 1)})
+    return pd.DataFrame(filas)
+
+
+_TURNO_IDX = {"manana": 0, "tarde": 1, "noche": 2, "todos": 3}
+_TIPOS = ("fijo", "flexible", "rotativo")
+
+
+def _factores_de(idx: int, centro: str, turno: str) -> dict[str, object]:
+    """Factores estructurales sintéticos y reproducibles para un centro/turno."""
+    rng = np.random.RandomState(PARAMS_DEMO.semilla_base + idx * 10 + _TURNO_IDX[turno])
+    base = _TIPOS[idx % 3]
+    if turno == "noche":
+        tipo = "rotativo"
+    elif turno == "manana" and base == "rotativo":
+        tipo = "flexible"
+    else:
+        tipo = base
+
+    es_rot, es_flex = tipo == "rotativo", tipo == "flexible"
+    rotacion = float(np.clip(12 + rng.rand() * 22 + (12 if es_rot else 0), 3, 60))
+    antiguedad = float(np.clip(9 - (4 if es_rot else 0) + rng.normal(0, 2), 1, 25))
+    satisf = float(np.clip(
+        7.5 - (1.2 if es_rot else 0) + (0.6 if es_flex else 0) + rng.normal(0, 0.4), 1, 10
+    ))
+    jornada = float(np.clip(160 + rng.normal(0, 8), 120, 200))
+    return {
+        "tipo_horario": tipo,
+        "rotacion_pct": round(rotacion, 1),
+        "antiguedad_media": round(antiguedad, 1),
+        "satisfaccion_media": round(satisf, 1),
+        "jornada_media": round(jornada, 0),
+    }
+
+
+def _mult_factores(f: dict[str, object]) -> float:
+    """Multiplicador suave del absentismo según los factores (efecto ilustrativo)."""
+    mult = 1.0
+    mult += 0.09 if f["tipo_horario"] == "rotativo" else (
+        -0.06 if f["tipo_horario"] == "flexible" else 0.0
+    )
+    mult += 0.004 * (float(f["rotacion_pct"]) - 20)
+    mult += -0.02 * (float(f["satisfaccion_media"]) - 7)
+    mult += -0.003 * (float(f["antiguedad_media"]) - 6)
+    return float(np.clip(mult, 0.8, 1.25))
+
+
+def generar_factores_para_db(fin: date | None = None) -> pd.DataFrame:
+    """Factores demo en el ESQUEMA de la tabla `factores` (por centro/turno/mes).
+
+    Los factores son constantes por centro/turno a lo largo de los periodos.
+    """
+    fin = fin or _fin_por_defecto()
+    periodos = _periodos(fin, PARAMS_DEMO.meses_historico)
+    filas: list[dict[str, object]] = []
+    for idx, centro in enumerate(PARAMS_DEMO.centros):
+        por_turno = {t: _factores_de(idx, centro, t) for t in ("manana", "tarde", "noche")}
+        # 'todos': tipo base del centro y promedio numérico de los tres turnos.
+        por_turno["todos"] = {
+            "tipo_horario": _TIPOS[idx % 3],
+            "rotacion_pct": round(np.mean([v["rotacion_pct"] for v in por_turno.values()]), 1),
+            "antiguedad_media": round(np.mean([v["antiguedad_media"] for v in por_turno.values()]), 1),
+            "satisfaccion_media": round(np.mean([v["satisfaccion_media"] for v in por_turno.values()]), 1),
+            "jornada_media": round(np.mean([v["jornada_media"] for v in por_turno.values()]), 0),
+        }
+        for turno, f in por_turno.items():
+            for anio, mes in periodos:
+                filas.append({"centro": centro, "turno": turno,
+                              "periodo": f"{anio}-{mes:02d}", **f})
     return pd.DataFrame(filas)
 
 

@@ -14,7 +14,7 @@ import config
 from ingesta import plantillas
 from ingesta.fuente import FuenteCSV, cargar_y_validar
 from modelo.motor import mejor_motor_disponible, motores_disponibles
-from persistencia import db, historico, previsiones
+from persistencia import db, factores, historico, previsiones
 from ui import servicios
 from ui.sidebar import Seleccion
 import recalcular as recalc
@@ -87,9 +87,16 @@ def _seccion_subida(sel: Seleccion) -> None:
                 ["centro", "turno", "periodo", "tasa", "jornadas_perdidas", "plantilla"]
             ]
             n = historico.guardar_historico(df, modo="real")
+            # Factores estructurales, si venían en el fichero.
+            cols_fac = [c for c in config.COLUMNAS_FACTORES if c in res_abs.df.columns]
+            n_fac = 0
+            if cols_fac:
+                fac_df = res_abs.df[["centro", "turno", "periodo"] + cols_fac]
+                n_fac = factores.guardar_factores(fac_df, modo="real")
             if res_gripe is not None and res_gripe.ok:
                 st.session_state["gripe_real"] = res_gripe.df
-            st.success(f"Guardadas {n} filas en el histórico real. Ahora pulsa **Recalcular**.")
+            extra = f" y {n_fac} de factores" if n_fac else ""
+            st.success(f"Guardadas {n} filas de histórico{extra}. Ahora pulsa **Recalcular**.")
     else:
         st.caption("En modo prueba la carga no se guarda (los datos son de práctica).")
 

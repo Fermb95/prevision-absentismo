@@ -75,7 +75,9 @@ def detectar_columnas_personales(columnas: list[str]) -> list[str]:
         toks = _tokens(col)
         for termino in config.COLUMNAS_PERSONALES_PROHIBIDAS:
             t = _normaliza(termino)
-            if t in toks or (len(t) >= 4 and t in norm):
+            # Token exacto siempre; subcadena solo para términos largos (>=5) para
+            # no dar falsos positivos como 'edad' dentro de 'antiguedad'.
+            if t in toks or (len(t) >= 5 and t in norm):
                 sospechosas.append(col)
                 break
     return sospechosas
@@ -202,6 +204,9 @@ def validar_absentismo(df_bruto: pd.DataFrame) -> ResultadoValidacion:
         )
         df = df.drop_duplicates(subset=clave, keep="last")
 
+    # --- Factores estructurales OPCIONALES (por centro/turno, agregados) ---
+    factores_presentes = _validar_factores(df, res)
+
     # --- Periodo y columnas de salida ---
     df["periodo"] = df["anio"].astype(str) + "-" + df["mes"].astype(str).str.zfill(2)
     if "plantilla_media" not in df.columns:
@@ -212,14 +217,54 @@ def validar_absentismo(df_bruto: pd.DataFrame) -> ResultadoValidacion:
     if "jornadas_teoricas" not in df.columns:
         df["jornadas_teoricas"] = pd.NA
 
+    if res.errores:
+        return res
+
     columnas_salida = [
         "centro", "turno", "anio", "mes", "periodo",
         "plantilla_media", "jornadas_teoricas", "jornadas_perdidas", "tasa",
-    ]
+    ] + factores_presentes
     res.df = df[columnas_salida].sort_values(["centro", "turno", "anio", "mes"]).reset_index(drop=True)
     res.n_filas = len(res.df)
     res.ok = True
     return res
+
+
+def _validar_factores(df: pd.DataFrame, res: ResultadoValidacion) -> list[str]:
+    """Valida (si vienen) los factores estructurales por centro/turno.
+
+    Modifica `df` in situ (normaliza tipo_horario, convierte numéricos) y añade
+    errores/avisos a `res`. Devuelve la lista de columnas de factor presentes.
+    """
+    presentes = [c for c in config.COLUMNAS_FACTORES if c in df.columns]
+    if not presentes:
+        return []
+
+    # tipo_horario: normalizar y validar contra el catálogo.
+    if "tipo_horario" in presentes:
+        df["tipo_horario"] = df["tipo_horario"].map(
+            lambda v: _normaliza(v) if pd.notna(v) else v
+        )
+        malos = sorted(
+            set(df["tipo_horario"].dropna()) - set(config.TIPOS_HORARIO)
+        )
+        if malos:
+            res.errores.append(
+                f"Valores de 'tipo_horario' no válidos: {', '.join(malos)}. "
+                f"Usa: {', '.join(config.TIPOS_HORARIO)}."
+            )
+
+    # Factores numéricos: convertir y avisar si se salen de rango.
+    for col, (lo, hi) in config.RANGOS_FACTORES.items():
+        if col in presentes:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+            fuera = df[col].dropna()
+            if not fuera.between(lo, hi).all():
+                res.avisos.append(
+                    f"Algunos valores de '{col}' están fuera del rango esperado "
+                    f"({lo:g}–{hi:g}); revísalos."
+                )
+    return presentes
 
 
 # ---------------------------------------------------------------------------

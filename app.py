@@ -23,6 +23,7 @@ from ui import (  # noqa: E402
     estilo,
     pagina_comparativa,
     pagina_datos,
+    pagina_factores,
     pagina_precision,
     pagina_prevision,
     pagina_resumen,
@@ -34,6 +35,7 @@ PAGINAS = {
     "📈 Previsión": pagina_prevision.render,
     "🎯 Precisión": pagina_precision.render,
     "🔀 Comparativa": pagina_comparativa.render,
+    "🧭 Factores": pagina_factores.render,
     "🗂️ Datos": pagina_datos.render,
 }
 

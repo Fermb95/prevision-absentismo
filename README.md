@@ -10,7 +10,8 @@ turno, **nunca por persona**.
 - **Interfaz:** en español, con números y fechas en formato español.
 - **Pantallas:** Resumen (panel semáforo de todos los centros), Previsión (KPIs +
   dimensionamiento de plantilla), Precisión (previsión vs. realidad + validación
-  temporal), Comparativa (una tanda frente a otra) y Datos (carga y recálculo).
+  temporal), Comparativa (una tanda frente a otra), Factores (qué características
+  del centro influyen en el absentismo) y Datos (carga y recálculo).
 - **Despliegue:** GitHub → Render (plan gratuito) + Turso para la persistencia.
 - **Ejecución local:** `streamlit run app.py`.
 
@@ -120,6 +121,25 @@ lector también autodetecta `,` como separador.
 La tasa se calcula como `jornadas_perdidas / jornadas_teoricas`. Alternativamente,
 si el fichero trae una columna **`tasa`** directa (0–1, o en % que se convierte
 automáticamente), se usa esa.
+
+### Columnas opcionales de factores (por centro/turno)
+
+Puedes añadir al fichero de absentismo estas columnas **agregadas del centro/turno**
+(nunca datos de personas). Si vienen, se usan en la página **Factores** para ver
+qué característica del centro se asocia con más o menos absentismo:
+
+| columna | tipo | descripción |
+|---|---|---|
+| `tipo_horario` | texto | `flexible`, `fijo` o `rotativo` |
+| `rotacion_pct` | número | rotación anual de plantilla del centro (%) |
+| `antiguedad_media` | número | antigüedad media de la plantilla (años) |
+| `satisfaccion_media` | número | satisfacción media (encuesta anónima, p. ej. 1–10) |
+| `jornada_media` | número | jornada media mensual (horas) |
+
+> **Nota de diseño (importante):** por privacidad y por no discriminar a la
+> plantilla, el análisis es **siempre agregado por centro/turno**. La herramienta
+> **no** hace scoring individual de personas ni usa características protegidas
+> (sexo, edad, discapacidad, afiliación sindical) como predictores.
 
 ### Fichero opcional: `gripe` (regresor externo)
 

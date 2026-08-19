@@ -159,8 +159,12 @@ def test_estacionalidad_normal_no_se_topa():
 # ------------------------------ PLANTILLAS ------------------------------
 def test_plantilla_tiene_columnas_exactas():
     df = plantillas.plantilla_absentismo_df()
-    from config import COLUMNAS_ABSENTISMO
-    assert list(df.columns) == list(COLUMNAS_ABSENTISMO)
+    from config import COLUMNAS_ABSENTISMO, COLUMNAS_FACTORES
+    # Debe contener todas las columnas obligatorias (y además los factores opcionales).
+    for c in COLUMNAS_ABSENTISMO:
+        assert c in df.columns
+    for c in COLUMNAS_FACTORES:
+        assert c in df.columns
     # Y la plantilla NO debe contener columnas personales.
     assert detectar_columnas_personales(list(df.columns)) == []
 

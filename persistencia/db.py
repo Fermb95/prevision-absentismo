@@ -130,6 +130,21 @@ _ESQUEMA: tuple[str, ...] = (
         modelo          TEXT    NOT NULL    -- 'prophet' | 'sarima'
     )
     """,
+    # Factores estructurales por centro/turno (agregados, opcionales). Se pueden
+    # actualizar (upsert) igual que el histórico.
+    """
+    CREATE TABLE IF NOT EXISTS factores (
+        centro            TEXT NOT NULL,
+        turno             TEXT NOT NULL,
+        periodo           TEXT NOT NULL,   -- 'YYYY-MM'
+        tipo_horario      TEXT,            -- 'flexible' | 'fijo' | 'rotativo'
+        rotacion_pct      REAL,
+        antiguedad_media  REAL,
+        satisfaccion_media REAL,
+        jornada_media     REAL,
+        PRIMARY KEY (centro, turno, periodo)
+    )
+    """,
     # Índices para las consultas típicas.
     "CREATE INDEX IF NOT EXISTS idx_hist_centro_turno ON historico (centro, turno)",
     "CREATE INDEX IF NOT EXISTS idx_prev_fecha ON previsiones (fecha_calculo)",

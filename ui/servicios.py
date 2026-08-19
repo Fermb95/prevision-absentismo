@@ -13,7 +13,7 @@ import math
 import pandas as pd
 
 import config
-from persistencia import db, historico, previsiones
+from persistencia import db, factores, historico, previsiones
 
 
 # ---------------------------------------------------------------------------
@@ -29,12 +29,14 @@ def asegurar_datos_demo() -> None:
 
     Es idempotente: si ya hay datos y una tanda de previsión, no hace nada.
     """
-    from datos_demo.generador import generar_historico_para_db
+    from datos_demo.generador import generar_factores_para_db, generar_historico_para_db
     from recalcular import recalcular
 
     db.inicializar_esquema(modo="prueba")
     if historico.leer_historico(modo="prueba").empty:
         historico.guardar_historico(generar_historico_para_db(), modo="prueba")
+    if not factores.hay_factores(modo="prueba"):
+        factores.guardar_factores(generar_factores_para_db(), modo="prueba")
     if previsiones.listar_ejecuciones(modo="prueba").empty:
         from modelo.motor import mejor_motor_disponible
         recalcular(modo="prueba", motor=mejor_motor_disponible())
@@ -54,6 +56,14 @@ def turnos_de(modo: str, centro: str | None = None) -> list[str]:
 
 def hay_datos(modo: str) -> bool:
     return not historico.leer_historico(modo=modo).empty
+
+
+def factores_de(modo: str, centro: str | None = None, turno: str | None = None) -> pd.DataFrame:
+    return factores.leer_factores(centro=centro, turno=turno, modo=modo)
+
+
+def hay_factores(modo: str) -> bool:
+    return factores.hay_factores(modo=modo)
 
 
 # ---------------------------------------------------------------------------

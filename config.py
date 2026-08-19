@@ -77,6 +77,25 @@ COLUMNA_TASA_ALTERNATIVA: str = "tasa"
 
 COLUMNAS_GRIPE: tuple[str, ...] = ("anio", "mes", "incidencia")
 
+# Factores estructurales OPCIONALES por centro/turno (agregados, nunca de persona).
+# Si vienen en el fichero de absentismo, se guardan y se usan para el análisis de
+# drivers (qué característica del CENTRO se asocia con más/menos absentismo).
+COLUMNAS_FACTORES: tuple[str, ...] = (
+    "tipo_horario",        # 'flexible' | 'fijo' | 'rotativo'
+    "rotacion_pct",        # rotación anual de plantilla del centro (%)
+    "antiguedad_media",    # antigüedad media de la plantilla (años)
+    "satisfaccion_media",  # satisfacción media (encuesta anónima, p. ej. 1–10)
+    "jornada_media",       # jornada media mensual (horas)
+)
+TIPOS_HORARIO: tuple[str, ...] = ("flexible", "fijo", "rotativo")
+# Factores numéricos y su rango razonable (para validación con avisos).
+RANGOS_FACTORES: dict[str, tuple[float, float]] = {
+    "rotacion_pct": (0.0, 100.0),
+    "antiguedad_media": (0.0, 50.0),
+    "satisfaccion_media": (0.0, 10.0),
+    "jornada_media": (0.0, 320.0),
+}
+
 # ---------------------------------------------------------------------------
 # 4. DEFINICIÓN DE ABSENTISMO Y TRATAMIENTO DE BAJAS LARGAS
 # ---------------------------------------------------------------------------
