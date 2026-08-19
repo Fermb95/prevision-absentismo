@@ -21,11 +21,15 @@ def plantilla_absentismo_df() -> pd.DataFrame:
     return pd.DataFrame(
         [
             {
-                "centro": "Valencia", "turno": "manana", "anio": 2026, "mes": 1,
+                "centro": "Almacén Norte", "turno": "manana", "anio": 2026, "mes": 1,
                 "plantilla_media": 27, "jornadas_teoricas": 540, "jornadas_perdidas": 38,
             },
             {
-                "centro": "Valencia", "turno": "noche", "anio": 2026, "mes": 1,
+                "centro": "Almacén Norte", "turno": "tarde", "anio": 2026, "mes": 1,
+                "plantilla_media": 18, "jornadas_teoricas": 360, "jornadas_perdidas": 25,
+            },
+            {
+                "centro": "Almacén Norte", "turno": "noche", "anio": 2026, "mes": 1,
                 "plantilla_media": 12, "jornadas_teoricas": 240, "jornadas_perdidas": 26,
             },
         ],

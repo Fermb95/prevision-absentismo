@@ -48,7 +48,15 @@ def main() -> None:
     eleccion = st.sidebar.radio("Página", options=list(PAGINAS.keys()))
 
     estilo.cabecera(sel.modo)
-    PAGINAS[eleccion](sel)
+    try:
+        PAGINAS[eleccion](sel)
+    except Exception as exc:  # noqa: BLE001 — la navegación debe seguir viva
+        st.error(
+            "Se ha producido un error al mostrar esta página. La navegación sigue "
+            "disponible en la barra lateral; prueba otra página o revisa los datos."
+        )
+        with st.expander("Detalles técnicos del error"):
+            st.exception(exc)
 
     st.sidebar.divider()
     st.sidebar.caption(

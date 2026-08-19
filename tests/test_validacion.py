@@ -174,7 +174,7 @@ def test_fuente_csv_round_trip():
     fuente = FuenteCSV(absentismo=buffer)
     res_abs, res_gripe = cargar_y_validar(fuente)
     assert res_abs.ok
-    assert res_abs.n_filas == 2
+    assert res_abs.n_filas == 3  # plantilla de ejemplo: mañana, tarde y noche
     assert res_gripe is None
 
 

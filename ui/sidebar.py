@@ -38,22 +38,40 @@ def construir_sidebar() -> Seleccion:
     )
     modo = "prueba" if modo_label.startswith("Prueba") else "real"
 
-    # En modo prueba, sembramos datos + primera previsión si hace falta.
-    if modo == "prueba":
-        servicios.asegurar_datos_demo()
-    else:
-        servicios.inicializar("real")
+    # Acceso a datos DEFENSIVO: si algo falla (p. ej. Turso mal configurado),
+    # se muestra el error pero la navegación NUNCA desaparece.
+    error_datos: Exception | None = None
+    centros: list[str] = []
+    try:
+        if modo == "prueba":
+            servicios.asegurar_datos_demo()
+        else:
+            servicios.inicializar("real")
+        centros = servicios.centros_de(modo)
+    except Exception as exc:  # noqa: BLE001 — queremos que la app siga en pie
+        error_datos = exc
+
+    if error_datos is not None:
+        st.sidebar.error(
+            "No se pudo acceder al almacenamiento. En modo real con Turso, revisa "
+            "las variables de entorno (página **Datos → Probar conexión**). "
+            f"Detalle: {error_datos}"
+        )
 
     # --- Centro y turno (dependientes de los datos disponibles) ---
-    centros = servicios.centros_de(modo)
+    centro: str | None = None
+    turno: str | None = None
     if centros:
         centro = st.sidebar.selectbox("Centro de trabajo", options=centros)
-        turnos = servicios.turnos_de(modo, centro)
-        turno = st.sidebar.selectbox(
-            "Turno", options=turnos, format_func=servicios.turno_bonito
-        )
-    else:
-        centro, turno = None, None
+        try:
+            turnos = servicios.turnos_de(modo, centro)
+        except Exception:  # noqa: BLE001
+            turnos = []
+        if turnos:
+            turno = st.sidebar.selectbox(
+                "Turno", options=turnos, format_func=servicios.turno_bonito
+            )
+    elif error_datos is None:
         st.sidebar.info("No hay datos cargados en este modo. Ve a la página **Datos**.")
 
     # --- Horizonte ---
@@ -71,7 +89,10 @@ def construir_sidebar() -> Seleccion:
 
     # --- Info del backend de persistencia ---
     st.sidebar.divider()
-    st.sidebar.caption(f"Almacenamiento: {db.describe_backend(modo)}")
+    try:
+        st.sidebar.caption(f"Almacenamiento: {db.describe_backend(modo)}")
+    except Exception:  # noqa: BLE001
+        pass
 
     return Seleccion(
         modo=modo, centro=centro, turno=turno,
