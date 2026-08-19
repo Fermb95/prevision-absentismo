@@ -7,10 +7,11 @@ runOnSave = false
 [browser]
 gatherUsageStats = false
 
+# Identidad HEFAME: amarillo corporativo #FACD01 + negro sobre blanco.
 [theme]
 base = "light"
-primaryColor = "#2563eb"
+primaryColor = "#111111"
 backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f4f6fa"
-textColor = "#111827"
+secondaryBackgroundColor = "#f6f6f3"
+textColor = "#111111"
 font = "sans serif"

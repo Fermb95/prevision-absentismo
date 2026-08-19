@@ -1,0 +1,8 @@
+Coloca aquí el logo oficial del grupo como "hefame.png".
+
+- Si existe ui/assets/hefame.png, la app lo usa automáticamente como logo
+  (cabecera y barra lateral).
+- Si no existe, la app dibuja el wordmark "HEFAME" con tipografía (negrita
+  cursiva) para no depender del fichero.
+
+Recomendado: PNG con fondo transparente, alto ~120 px, para que se vea nítido.

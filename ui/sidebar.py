@@ -14,7 +14,7 @@ import streamlit as st
 
 import config
 from persistencia import db
-from ui import servicios
+from ui import estilo, servicios
 
 
 @dataclass
@@ -27,7 +27,7 @@ class Seleccion:
 
 
 def construir_sidebar() -> Seleccion:
-    st.sidebar.title("Absentismo · Previsión")
+    estilo.logo_sidebar()  # logo HEFAME fijo, siempre visible
 
     # --- Selector de MODO (por defecto: prueba) ---
     modo_label = st.sidebar.radio(
@@ -44,7 +44,11 @@ def construir_sidebar() -> Seleccion:
     centros: list[str] = []
     try:
         if modo == "prueba":
-            servicios.asegurar_datos_demo()
+            # Sembrar el demo solo una vez por sesión (fluidez: evita repetir
+            # comprobaciones y el primer recálculo en cada interacción).
+            if not st.session_state.get("_demo_sembrado"):
+                servicios.asegurar_datos_demo()
+                st.session_state["_demo_sembrado"] = True
         else:
             servicios.inicializar("real")
         centros = servicios.centros_de(modo)
