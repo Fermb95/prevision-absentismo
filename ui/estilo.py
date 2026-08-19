@@ -81,11 +81,8 @@ h1, h2, h3 {{ color: var(--texto); font-weight: 700; letter-spacing: -0.01em; }}
   border: 1px solid rgba(0,0,0,.08);
 }}
 .cabecera .marca {{ display: flex; align-items: center; gap: 18px; }}
-/* Logo sobre chip blanco (rinde limpio sobre el panel amarillo) */
-.cabecera .marca img {{
-  background: #fff; padding: 8px 13px; border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.18);
-}}
+/* El logo (círculo blanco + H) va DIRECTO sobre el amarillo: así se ve la H. */
+.cabecera .marca img {{ display: block; }}
 .cabecera .separador {{ width: 2px; height: 42px; background: rgba(0,0,0,.22); }}
 .cabecera .titulo {{ font-size: 1.25rem; font-weight: 800; color: #111; letter-spacing: -.02em; }}
 .cabecera .subtitulo {{ color: #2b2b2b; font-size: .88rem; margin-top: 1px; }}
@@ -97,9 +94,8 @@ h1, h2, h3 {{ color: var(--texto); font-weight: 700; letter-spacing: -0.01em; }}
 
 /* --- Logo fijo en la barra lateral --- */
 .logo-sidebar {{
-  background: #ffffff; border-radius: 12px; padding: 12px 10px;
-  text-align: center; margin: -8px 0 12px 0;
-  border: 1px solid var(--borde); border-top: 3px solid var(--amarillo);
+  background: var(--amarillo); border-radius: 12px; padding: 14px 12px;
+  text-align: center; margin: -8px 0 12px 0; border: 1px solid rgba(0,0,0,.08);
   box-shadow: 0 1px 3px rgba(16,24,40,.06);
 }}
 .logo-sidebar img {{ display: inline-block; }}
