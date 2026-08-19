@@ -73,7 +73,7 @@ def leer_tanda(id_ejecucion: str, modo: str = "real") -> pd.DataFrame:
         cur = con.execute(
             f"SELECT {', '.join(COLUMNAS)} FROM previsiones "
             "WHERE id_ejecucion = ? ORDER BY centro, turno, periodo_objetivo",
-            [id_ejecucion],
+            (id_ejecucion,),
         )
         filas = filas_como_dicts(cur)
     return pd.DataFrame(filas, columns=list(COLUMNAS))
@@ -113,7 +113,7 @@ def leer_prevision_a_fecha(
         cur = con.execute(
             "SELECT id_ejecucion FROM previsiones WHERE fecha_calculo <= ? "
             "ORDER BY fecha_calculo DESC LIMIT 1",
-            [tope],
+            (tope,),
         )
         fila = cur.fetchone()
         if fila is None:
@@ -132,7 +132,7 @@ def leer_prevision_a_fecha(
         cur = con.execute(
             f"SELECT {', '.join(COLUMNAS)} FROM previsiones WHERE {where} "
             "ORDER BY periodo_objetivo",
-            params,
+            tuple(params),
         )
         filas = filas_como_dicts(cur)
     return pd.DataFrame(filas, columns=list(COLUMNAS))

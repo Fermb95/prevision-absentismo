@@ -70,7 +70,7 @@ def leer_factores(
     where = f"WHERE {' AND '.join(clausulas)}" if clausulas else ""
     sql = f"SELECT {', '.join(COLUMNAS)} FROM factores {where} ORDER BY centro, turno, periodo"
     with conexion(modo) as con:
-        cur = con.execute(sql, params)
+        cur = con.execute(sql, tuple(params))
         filas = filas_como_dicts(cur)
     return pd.DataFrame(filas, columns=list(COLUMNAS))
 
