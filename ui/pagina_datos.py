@@ -13,8 +13,9 @@ import streamlit as st
 import config
 from ingesta import plantillas
 from ingesta.fuente import FuenteCSV, cargar_y_validar
+from ingesta.segmentacion import preparar_persistencia
 from modelo.motor import mejor_motor_disponible, motores_disponibles
-from persistencia import db, factores, historico, previsiones
+from persistencia import db, factores, historico, previsiones, segmentacion
 from ui import servicios
 from ui.sidebar import Seleccion
 import recalcular as recalc
@@ -83,19 +84,28 @@ def _seccion_subida(sel: Seleccion) -> None:
     # --- Confirmar carga (solo en modo real; escribe en la base real) ---
     if sel.modo == "real":
         if st.button("💾 Confirmar carga en modo real", type="primary"):
-            df = res_abs.df.rename(columns={"plantilla_media": "plantilla"})[
-                ["centro", "turno", "periodo", "tasa", "jornadas_perdidas", "plantilla"]
-            ]
-            n = historico.guardar_historico(df, modo="real")
+            hist_df, seg_df = preparar_persistencia(res_abs.df)
+            n = historico.guardar_historico(hist_df, modo="real")
+            # Micro-segmentación (si el fichero traía 'puesto').
+            n_seg = 0
+            if not seg_df.empty:
+                n_seg = segmentacion.guardar_segmentacion(seg_df, modo="real")
             # Factores estructurales, si venían en el fichero.
             cols_fac = [c for c in config.COLUMNAS_FACTORES if c in res_abs.df.columns]
             n_fac = 0
             if cols_fac:
-                fac_df = res_abs.df[["centro", "turno", "periodo"] + cols_fac]
+                fac_df = res_abs.df[["centro", "turno", "periodo"] + cols_fac].drop_duplicates(
+                    subset=["centro", "turno", "periodo"]
+                )
                 n_fac = factores.guardar_factores(fac_df, modo="real")
             if res_gripe is not None and res_gripe.ok:
                 st.session_state["gripe_real"] = res_gripe.df
-            extra = f" y {n_fac} de factores" if n_fac else ""
+            extras = []
+            if n_seg:
+                extras.append(f"{n_seg} de segmentación")
+            if n_fac:
+                extras.append(f"{n_fac} de factores")
+            extra = (" y " + ", ".join(extras)) if extras else ""
             st.success(f"Guardadas {n} filas de histórico{extra}. Ahora pulsa **Recalcular**.")
     else:
         st.caption("En modo prueba la carga no se guarda (los datos son de práctica).")

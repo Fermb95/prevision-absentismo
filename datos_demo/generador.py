@@ -226,6 +226,63 @@ def generar_factores_para_db(fin: date | None = None) -> pd.DataFrame:
     return pd.DataFrame(filas)
 
 
+# Puestos demo: turnos donde existen, rango de carga y peso de plantilla.
+_PUESTOS = {
+    "Preparación": {"turnos": ("manana", "tarde", "noche"), "carga": (55, 82), "peso": 0.45},
+    "Carretillero": {"turnos": ("manana", "tarde", "noche"), "carga": (35, 55), "peso": 0.28},
+    "Recepción": {"turnos": ("manana", "tarde"), "carga": (25, 45), "peso": 0.18},
+    "Administración": {"turnos": ("manana",), "carga": (14, 28), "peso": 0.12},
+}
+_PUESTO_IDX = {n: i for i, n in enumerate(_PUESTOS)}
+
+
+def generar_segmentacion_para_db(fin: date | None = None) -> pd.DataFrame:
+    """Detalle demo por centro/turno/puesto/mes (esquema de la tabla `segmentacion`).
+
+    La carga influye (suave) en el absentismo, y Preparación/noche salen peor, para
+    que el análisis de segmentación muestre focos realistas.
+    """
+    fin = fin or _fin_por_defecto()
+    periodos = _periodos(fin, PARAMS_DEMO.meses_historico)
+    filas: list[dict[str, object]] = []
+
+    for idx, centro in enumerate(PARAMS_DEMO.centros):
+        rng_c = np.random.RandomState(PARAMS_DEMO.semilla_base + idx)
+        base = 0.045 + rng_c.rand() * 0.03
+        plantilla_centro = int(80 + rng_c.rand() * 160)
+
+        for puesto, cfg in _PUESTOS.items():
+            for turno in cfg["turnos"]:
+                rng = np.random.RandomState(
+                    PARAMS_DEMO.semilla_base + idx * 100
+                    + _TURNO_IDX[turno] * 10 + _PUESTO_IDX[puesto]
+                )
+                carga = float(np.clip(
+                    cfg["carga"][0] + rng.rand() * (cfg["carga"][1] - cfg["carga"][0]), 5, 95
+                ))
+                reparto_turno = {"manana": 0.45, "tarde": 0.35, "noche": 0.20}[turno]
+                plantilla = max(int(plantilla_centro * cfg["peso"] * reparto_turno), 3)
+                # Efecto suave de la carga (centrada en 40) sobre el absentismo.
+                efecto_carga = np.clip((carga - 40) / 40 * 0.45, -0.3, 0.45)
+
+                for t, (anio, mes) in enumerate(periodos):
+                    estacional = _ESTACIONALIDAD[mes]
+                    ruido = 1.0 + rng.normal(0, 0.07)
+                    tasa = base * _FACTOR_TURNO[turno] * estacional * (1 + efecto_carga) * ruido
+                    tasa = float(np.clip(tasa, 0.005, 0.4))
+                    dias_lab = int(np.busday_count(date(anio, mes, 1), _siguiente_mes(anio, mes)))
+                    teoricas = plantilla * dias_lab
+                    filas.append({
+                        "centro": centro, "turno": turno, "puesto": puesto,
+                        "periodo": f"{anio}-{mes:02d}",
+                        "jornadas_teoricas": teoricas,
+                        "jornadas_perdidas": int(round(tasa * teoricas)),
+                        "plantilla": plantilla,
+                        "carga": round(carga, 1),
+                    })
+    return pd.DataFrame(filas)
+
+
 def generar_historico_para_db(fin: date | None = None) -> pd.DataFrame:
     """Panel demo en el ESQUEMA de la tabla `historico` (para persistir).
 

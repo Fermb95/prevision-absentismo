@@ -207,6 +207,9 @@ def validar_absentismo(df_bruto: pd.DataFrame) -> ResultadoValidacion:
     # --- Factores estructurales OPCIONALES (por centro/turno, agregados) ---
     factores_presentes = _validar_factores(df, res)
 
+    # --- Micro-segmentación OPCIONAL (puesto + carga), por subgrupo agregado ---
+    segmentacion_presentes = _validar_segmentacion(df, res)
+
     # --- Periodo y columnas de salida ---
     df["periodo"] = df["anio"].astype(str) + "-" + df["mes"].astype(str).str.zfill(2)
     if "plantilla_media" not in df.columns:
@@ -223,7 +226,7 @@ def validar_absentismo(df_bruto: pd.DataFrame) -> ResultadoValidacion:
     columnas_salida = [
         "centro", "turno", "anio", "mes", "periodo",
         "plantilla_media", "jornadas_teoricas", "jornadas_perdidas", "tasa",
-    ] + factores_presentes
+    ] + factores_presentes + segmentacion_presentes
     res.df = df[columnas_salida].sort_values(["centro", "turno", "anio", "mes"]).reset_index(drop=True)
     res.n_filas = len(res.df)
     res.ok = True
@@ -264,6 +267,26 @@ def _validar_factores(df: pd.DataFrame, res: ResultadoValidacion) -> list[str]:
                     f"Algunos valores de '{col}' están fuera del rango esperado "
                     f"({lo:g}–{hi:g}); revísalos."
                 )
+    return presentes
+
+
+def _validar_segmentacion(df: pd.DataFrame, res: ResultadoValidacion) -> list[str]:
+    """Valida (si vienen) las columnas de micro-segmentación: puesto y carga.
+
+    'puesto' es texto (rol/función). 'carga' es numérico (indicador de carga).
+    Devuelve la lista de columnas presentes.
+    """
+    presentes: list[str] = []
+    if config.COLUMNA_PUESTO in df.columns:
+        df[config.COLUMNA_PUESTO] = (
+            df[config.COLUMNA_PUESTO].astype("string").str.strip()
+        )
+        presentes.append(config.COLUMNA_PUESTO)
+    if config.COLUMNA_CARGA in df.columns:
+        df[config.COLUMNA_CARGA] = pd.to_numeric(df[config.COLUMNA_CARGA], errors="coerce")
+        if df[config.COLUMNA_CARGA].isna().all():
+            res.avisos.append("La columna 'carga' no tiene valores numéricos válidos.")
+        presentes.append(config.COLUMNA_CARGA)
     return presentes
 
 

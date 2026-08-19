@@ -145,8 +145,23 @@ _ESQUEMA: tuple[str, ...] = (
         PRIMARY KEY (centro, turno, periodo)
     )
     """,
+    # Micro-segmentación por centro/turno/puesto/mes (agregada, opcional).
+    """
+    CREATE TABLE IF NOT EXISTS segmentacion (
+        centro            TEXT NOT NULL,
+        turno             TEXT NOT NULL,
+        puesto            TEXT NOT NULL,
+        periodo           TEXT NOT NULL,   -- 'YYYY-MM'
+        jornadas_teoricas INTEGER,
+        jornadas_perdidas INTEGER,
+        plantilla         INTEGER,
+        carga             REAL,
+        PRIMARY KEY (centro, turno, puesto, periodo)
+    )
+    """,
     # Índices para las consultas típicas.
     "CREATE INDEX IF NOT EXISTS idx_hist_centro_turno ON historico (centro, turno)",
+    "CREATE INDEX IF NOT EXISTS idx_seg_centro ON segmentacion (centro)",
     "CREATE INDEX IF NOT EXISTS idx_prev_fecha ON previsiones (fecha_calculo)",
     "CREATE INDEX IF NOT EXISTS idx_prev_centro_turno ON previsiones (centro, turno)",
 )

@@ -88,6 +88,15 @@ COLUMNAS_FACTORES: tuple[str, ...] = (
     "jornada_media",       # jornada media mensual (horas)
 )
 TIPOS_HORARIO: tuple[str, ...] = ("flexible", "fijo", "rotativo")
+
+# Micro-segmentación OPCIONAL dentro del centro (agregada por subgrupo, NUNCA por
+# persona). Si el fichero trae 'puesto' (y opcionalmente 'carga'), se guarda el
+# detalle por centro/turno/puesto/mes para la página de Segmentación, y además se
+# agrega a centro/turno para la previsión.
+COLUMNA_PUESTO: str = "puesto"          # texto: rol/función (p. ej. "Preparación")
+COLUMNA_CARGA: str = "carga"            # numérico: indicador de carga de trabajo del subgrupo
+# Etiquetas de las franjas de carga (se calculan por terciles de los datos).
+FRANJAS_CARGA: tuple[str, ...] = ("baja", "media", "alta")
 # Factores numéricos y su rango razonable (para validación con avisos).
 RANGOS_FACTORES: dict[str, tuple[float, float]] = {
     "rotacion_pct": (0.0, 100.0),

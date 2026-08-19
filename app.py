@@ -27,6 +27,7 @@ from ui import (  # noqa: E402
     pagina_precision,
     pagina_prevision,
     pagina_resumen,
+    pagina_segmentacion,
 )
 from ui.sidebar import construir_sidebar  # noqa: E402
 
@@ -36,6 +37,7 @@ PAGINAS = {
     "🎯 Precisión": pagina_precision.render,
     "🔀 Comparativa": pagina_comparativa.render,
     "🧭 Factores": pagina_factores.render,
+    "🔬 Segmentación": pagina_segmentacion.render,
     "🗂️ Datos": pagina_datos.render,
 }
 

@@ -13,7 +13,7 @@ import math
 import pandas as pd
 
 import config
-from persistencia import db, factores, historico, previsiones
+from persistencia import db, factores, historico, previsiones, segmentacion
 
 
 # ---------------------------------------------------------------------------
@@ -29,7 +29,11 @@ def asegurar_datos_demo() -> None:
 
     Es idempotente: si ya hay datos y una tanda de previsión, no hace nada.
     """
-    from datos_demo.generador import generar_factores_para_db, generar_historico_para_db
+    from datos_demo.generador import (
+        generar_factores_para_db,
+        generar_historico_para_db,
+        generar_segmentacion_para_db,
+    )
     from recalcular import recalcular
 
     db.inicializar_esquema(modo="prueba")
@@ -37,6 +41,8 @@ def asegurar_datos_demo() -> None:
         historico.guardar_historico(generar_historico_para_db(), modo="prueba")
     if not factores.hay_factores(modo="prueba"):
         factores.guardar_factores(generar_factores_para_db(), modo="prueba")
+    if not segmentacion.hay_segmentacion(modo="prueba"):
+        segmentacion.guardar_segmentacion(generar_segmentacion_para_db(), modo="prueba")
     if previsiones.listar_ejecuciones(modo="prueba").empty:
         from modelo.motor import mejor_motor_disponible
         recalcular(modo="prueba", motor=mejor_motor_disponible())
@@ -64,6 +70,14 @@ def factores_de(modo: str, centro: str | None = None, turno: str | None = None) 
 
 def hay_factores(modo: str) -> bool:
     return factores.hay_factores(modo=modo)
+
+
+def segmentacion_de(modo: str, centro: str | None = None) -> pd.DataFrame:
+    return segmentacion.leer_segmentacion(centro=centro, modo=modo)
+
+
+def hay_segmentacion(modo: str) -> bool:
+    return segmentacion.hay_segmentacion(modo=modo)
 
 
 # ---------------------------------------------------------------------------

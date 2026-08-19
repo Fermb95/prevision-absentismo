@@ -11,7 +11,8 @@ turno, **nunca por persona**.
 - **Pantallas:** Resumen (panel semáforo de todos los centros), Previsión (KPIs +
   dimensionamiento de plantilla), Precisión (previsión vs. realidad + validación
   temporal), Comparativa (una tanda frente a otra), Factores (qué características
-  del centro influyen en el absentismo) y Datos (carga y recálculo).
+  del centro influyen en el absentismo), Segmentación (turno × puesto × carga
+  dentro de un centro, para localizar el foco) y Datos (carga y recálculo).
 - **Despliegue:** GitHub → Render (plan gratuito) + Turso para la persistencia.
 - **Ejecución local:** `streamlit run app.py`.
 
@@ -136,10 +137,27 @@ qué característica del centro se asocia con más o menos absentismo:
 | `satisfaccion_media` | número | satisfacción media (encuesta anónima, p. ej. 1–10) |
 | `jornada_media` | número | jornada media mensual (horas) |
 
+### Columnas opcionales de micro-segmentación (por subgrupo)
+
+Para la página **Segmentación** (localizar el foco DENTRO de un centro) puedes
+aportar el detalle por puesto añadiendo dos columnas más, con **una fila por
+centro/turno/puesto/mes**:
+
+| columna | tipo | descripción |
+|---|---|---|
+| `puesto` | texto | rol/función del subgrupo (p. ej. `Preparación`, `Carretillero`) |
+| `carga` | número | indicador de carga de trabajo del subgrupo (el que uséis) |
+
+Si viene `puesto`, la app guarda el detalle para el análisis de segmentación **y**
+lo agrega automáticamente a centro/turno para la previsión (no tienes que subir
+los datos dos veces). Las franjas de carga (baja/media/alta) se calculan por
+terciles de los datos.
+
 > **Nota de diseño (importante):** por privacidad y por no discriminar a la
-> plantilla, el análisis es **siempre agregado por centro/turno**. La herramienta
-> **no** hace scoring individual de personas ni usa características protegidas
-> (sexo, edad, discapacidad, afiliación sindical) como predictores.
+> plantilla, todo el análisis es **agregado por centro/turno/puesto**. La
+> herramienta **no** hace scoring individual de personas, **no** identifica a
+> trabajadores concretos, y **no** usa características protegidas (sexo, edad,
+> discapacidad, afiliación sindical) como predictores.
 
 ### Fichero opcional: `gripe` (regresor externo)
 
